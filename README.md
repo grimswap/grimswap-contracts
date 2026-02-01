@@ -19,20 +19,16 @@ Spectre is the first privacy-preserving DEX built on Uniswap v4, combining:
 | `RingVerifier.sol` | LSAG ring signature verification |
 | `StealthAddressRegistry.sol` | Stealth meta-address registration and generation |
 | `ERC5564Announcer.sol` | ERC-5564 payment announcement events |
-                                                                                                                                                
-                                                                                                                                                                           
-  Deployment Summary                                                                                                                                                       
-  ┌────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────┐                                                  
-  │        Contract        │                                          Address                                           │                                                  
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
-  │ SpectreHook            │ https://unichain-sepolia.blockscout.com/address/0x1D508fABBff9Cb22746Fe56dB763F58F384bCd38 │                                                  
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
-  │ RingVerifier           │ https://unichain-sepolia.blockscout.com/address/0x6A150E2681dEeb16C2e9C446572087e3da32981E │                                                  
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
-  │ StealthAddressRegistry │ https://unichain-sepolia.blockscout.com/address/0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307 │                                                  
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
-  │ ERC5564Announcer       │ https://unichain-sepolia.blockscout.com/address/0x42013A72753F6EC28e27582D4cDb8425b44fd311 │                                                  
-  └────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────┘                                                                                                                
+
+## Deployed Contracts (Unichain Sepolia)
+
+| Contract | Address |
+|----------|---------|
+| SpectreHook | [`0xA4D8EcabC2597271DDd436757b6349Ef412B80c4`](https://unichain-sepolia.blockscout.com/address/0xA4D8EcabC2597271DDd436757b6349Ef412B80c4) |
+| RingVerifierMock | [`0x6A150E2681dEeb16C2e9C446572087e3da32981E`](https://unichain-sepolia.blockscout.com/address/0x6A150E2681dEeb16C2e9C446572087e3da32981E) |
+| StealthAddressRegistry | [`0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307`](https://unichain-sepolia.blockscout.com/address/0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307) |
+| ERC5564Announcer | [`0x42013A72753F6EC28e27582D4cDb8425b44fd311`](https://unichain-sepolia.blockscout.com/address/0x42013A72753F6EC28e27582D4cDb8425b44fd311) |
+| PoolTestHelper | [`0x26a669aC1e5343a50260490eC0C1be21f9818b17`](https://unichain-sepolia.blockscout.com/address/0x26a669aC1e5343a50260490eC0C1be21f9818b17) |
 
 ## Installation
 
@@ -85,59 +81,45 @@ forge script script/Deploy.s.sol:DeploySpectre \
 
 | Network | Chain ID | RPC | Explorer |
 |---------|----------|-----|----------|
-| Unichain Sepolia | 1301 | https://sepolia.unichain.org | https://sepolia.uniscan.xyz |
+| Unichain Sepolia | 1301 | https://sepolia.unichain.org | https://unichain-sepolia.blockscout.com |
 | Unichain Mainnet | 130 | https://mainnet.unichain.org | https://uniscan.xyz |
 
 ## Architecture
 
 ```
-User → SDK (generates ring sig + stealth addr) → SpectreHook
-                                                      │
-                                                      ├── beforeSwap: verify ring signature
-                                                      │
-                                                      ├── [Uniswap swap executes]
-                                                      │
-                                                      └── afterSwap: route to stealth address
+User --> SDK (generates ring sig + stealth addr) --> SpectreHook
+                                                          |
+                                                          +-- beforeSwap: verify ring signature
+                                                          |
+                                                          +-- [Uniswap swap executes]
+                                                          |
+                                                          +-- afterSwap: store stealth address
+                                                          |
+                                                     PoolTestHelper
+                                                          |
+                                                          +-- route output to stealth address
 ```
 
-# Integration Test Summary                                                                                                                                                 
-                                                                                                                                                                           
-  3 Transactions Executed on Unichain Sepolia:                                                                                                                             
-  #: 1                                                                                                                                                                     
-  Function: registerStealthMetaAddress                                                                                                                                     
-  Contract: StealthAddressRegistry                                                                                                                                         
-  Tx Hash: https://unichain-sepolia.blockscout.com/tx/0x6f4a0b7a6c83994efa334527b4a95322a92e9aae6fcb5c37efcce62fc3aa26b1                                                   
-  ────────────────────────────────────────                                                                                                                                 
-  #: 2                                                                                                                                                                     
-  Function: generateStealthAddress                                                                                                                                         
-  Contract: StealthAddressRegistry                                                                                                                                         
-  Tx Hash: https://unichain-sepolia.blockscout.com/tx/0x783837e9ee01398a786dbefc6b4216b993e89690602a4c50533d6fb4e4692d1f                                                   
-  ────────────────────────────────────────                                                                                                                                 
-  #: 3                                                                                                                                                                     
-  Function: announce                                                                                                                                                       
-  Contract: ERC5564Announcer                                                                                                                                               
-  Tx Hash: https://unichain-sepolia.blockscout.com/tx/0x53d300183b30e1abf82e57ca504e72533469f91269a7d8697238d9c83e5e29d9                                                   
-  Test Results                                                                                                                                                             
-                                                                                                                                                                           
-  === Test 1: SpectreHook Stats ===                                                                                                                                        
-  Total private swaps: 0                                                                                                                                                   
-  MIN_RING_SIZE: 2                                                                                                                                                         
-  MAX_RING_SIZE: 10                                                                                                                                                        
-                                                                                                                                                                           
-  === Test 2: Register Stealth Meta-Address ===                                                                                                                            
-  Meta-address length: 66 bytes ✓                                                                                                                                          
-                                                                                                                                                                           
-  === Test 3: Generate Stealth Address ===                                                                                                                                 
-  Stealth address: 0xbB9149F6a9F685e58B008626293788FaFDc879b9 ✓                                                                                                            
-  Ephemeral pubkey: 33 bytes ✓                                                                                                                                             
-  View tag: 242 ✓                                                                                                                                                          
-                                                                                                                                                                           
-  === Test 4: Emit Announcement ===                                                                                                                                        
-  ERC-5564 Announcement emitted ✓                                                                                                                                          
-                                                                                                                                                                           
-  === Test 5: RingVerifier Constants ===                                                                                                                                   
-  MIN_RING_SIZE: 2 ✓                                                                                                                                                       
-  MAX_RING_SIZE: 10 ✓               
+## Privacy Flow
+
+1. **SDK** generates stealth keys for recipient
+2. **SDK** creates LSAG ring signature (hides sender among decoys)
+3. **SpectreHook.beforeSwap()** verifies ring signature, stores stealth address
+4. **Uniswap v4** executes the AMM swap
+5. **SpectreHook.afterSwap()** generates stealth address, emits announcement
+6. **PoolTestHelper** routes output tokens to stealth address (not sender!)
+7. **Recipient** scans announcements to find incoming transfers
+
+## Production Privacy Verified
+
+Test transaction showing tokens routed to stealth address:
+
+**TX:** [`0x1856c612da4362dc69b34d808359ab709d623d157cc83019f88b98d0ca9260a7`](https://unichain-sepolia.blockscout.com/tx/0x1856c612da4362dc69b34d808359ab709d623d157cc83019f88b98d0ca9260a7)
+
+| Address | Token B Balance |
+|---------|-----------------|
+| Sender (public) | 997132 (unchanged!) |
+| Stealth Address | 9.77 (received!) |
 
 ## License
 
