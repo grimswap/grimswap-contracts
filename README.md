@@ -19,6 +19,20 @@ Spectre is the first privacy-preserving DEX built on Uniswap v4, combining:
 | `RingVerifier.sol` | LSAG ring signature verification |
 | `StealthAddressRegistry.sol` | Stealth meta-address registration and generation |
 | `ERC5564Announcer.sol` | ERC-5564 payment announcement events |
+                                                                                                                                                
+                                                                                                                                                                           
+  All 3 contracts deployed and verified on Unichain Sepolia Testnet:                                                                                                       
+  ┌────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────┐                                                  
+  │        Contract        │                                          Address                                           │                                                  
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
+  │ RingVerifier           │ https://unichain-sepolia.blockscout.com/address/0x6A150E2681dEeb16C2e9C446572087e3da32981E │                                                  
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
+  │ StealthAddressRegistry │ https://unichain-sepolia.blockscout.com/address/0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307 │                                                  
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤                                                  
+  │ ERC5564Announcer       │ https://unichain-sepolia.blockscout.com/address/0x42013A72753F6EC28e27582D4cDb8425b44fd311 │                                                  
+  └────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────┘                                                  
+  Note: The main SpectreHook contract needs the Uniswap v4 PoolManager address on Unichain to deploy. Once you have that address, update script/Deploy.s.sol and deploy the
+   hook.                                                                                                                     
 
 ## Installation
 

@@ -14,11 +14,9 @@ import {ERC5564Announcer} from "../src/ERC5564Announcer.sol";
 /// @title DeploySpectre
 /// @notice Deployment script for Spectre Protocol contracts
 contract DeploySpectre is Script {
-    // Uniswap v4 PoolManager addresses
-    // Unichain Sepolia: TBD (check Uniswap docs)
-    // Unichain Mainnet: TBD (check Uniswap docs)
-    address constant POOL_MANAGER_SEPOLIA = address(0); // TODO: Update with actual address
-    address constant POOL_MANAGER_MAINNET = address(0); // TODO: Update with actual address
+    // Uniswap v4 PoolManager addresses (from docs.uniswap.org/contracts/v4/deployments)
+    address constant POOL_MANAGER_SEPOLIA = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC; // Unichain Sepolia
+    address constant POOL_MANAGER_MAINNET = 0x1F98400000000000000000000000000000000004; // Unichain Mainnet
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
