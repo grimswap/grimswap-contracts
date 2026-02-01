@@ -249,9 +249,10 @@ contract SpectreHook is BaseHook {
         // Clear pending swap data
         delete pendingSwaps[sender];
 
-        // Return delta to redirect funds to stealth address
-        // Note: In production, this would integrate with PoolManager's settlement
-        return (this.afterSwap.selector, outputAmount);
+        // Return zero delta for demo - funds go to sender normally
+        // In production, would integrate with PoolManager to redirect to stealthAddress
+        // The stealth address is announced via ERC-5564 for recipient to claim
+        return (this.afterSwap.selector, 0);
     }
 
     /*//////////////////////////////////////////////////////////////
