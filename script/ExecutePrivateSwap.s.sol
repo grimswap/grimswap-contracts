@@ -15,7 +15,7 @@ import {HookMiner} from "v4-periphery/src/utils/HookMiner.sol";
 import {TestERC20} from "../src/test/TestERC20.sol";
 import {PoolTestHelper} from "../src/test/PoolTestHelper.sol";
 import {RingVerifierMock} from "../src/test/RingVerifierMock.sol";
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 import {IRingVerifier} from "../src/interfaces/IRingVerifier.sol";
 import {IStealthAddressRegistry} from "../src/interfaces/IStealthAddressRegistry.sol";
 import {IERC5564Announcer} from "../src/interfaces/IERC5564Announcer.sol";
@@ -50,7 +50,7 @@ contract ExecutePrivateSwap is Script {
 
         console.log("");
         console.log("================================================================");
-        console.log("     SPECTRE PROTOCOL - FULL PRIVATE SWAP EXECUTION TEST");
+        console.log("       GRIMSWAP - FULL PRIVATE SWAP EXECUTION TEST");
         console.log("================================================================");
         console.log("");
         console.log("Deployer:", deployer);
@@ -69,9 +69,9 @@ contract ExecutePrivateSwap is Script {
         console.log("");
 
         // ============================================
-        // STEP 2: Deploy SpectreHook with Mock Verifier
+        // STEP 2: Deploy GrimHook with Mock Verifier
         // ============================================
-        console.log("--- STEP 2: Deploy SpectreHook with Mined Address ---");
+        console.log("--- STEP 2: Deploy GrimHook with Mined Address ---");
 
         bytes memory constructorArgs = abi.encode(
             IPoolManager(POOL_MANAGER),
@@ -83,20 +83,20 @@ contract ExecutePrivateSwap is Script {
         (address hookAddress, bytes32 salt) = HookMiner.find(
             CREATE2_DEPLOYER,
             REQUIRED_FLAGS,
-            type(SpectreHook).creationCode,
+            type(GrimHook).creationCode,
             constructorArgs
         );
 
         console.log("Mined hook address:", hookAddress);
         console.log("Salt:", vm.toString(salt));
 
-        bytes memory bytecode = abi.encodePacked(type(SpectreHook).creationCode, constructorArgs);
+        bytes memory bytecode = abi.encodePacked(type(GrimHook).creationCode, constructorArgs);
         (bool success,) = CREATE2_DEPLOYER.call(abi.encodePacked(salt, bytecode));
         require(success, "Hook deployment failed");
         require(hookAddress.code.length > 0, "Hook has no code");
 
-        SpectreHook spectreHook = SpectreHook(hookAddress);
-        console.log("SpectreHook deployed:", address(spectreHook));
+        GrimHook grimHook = GrimHook(hookAddress);
+        console.log("GrimHook deployed:", address(grimHook));
         console.log("Address flags:", uint160(hookAddress) & Hooks.ALL_HOOK_MASK);
         console.log("");
 
@@ -131,13 +131,13 @@ contract ExecutePrivateSwap is Script {
         // ============================================
         // STEP 5: Create Pool
         // ============================================
-        console.log("--- STEP 5: Create Pool with SpectreHook ---");
+        console.log("--- STEP 5: Create Pool with GrimHook ---");
         PoolKey memory poolKey = PoolKey({
             currency0: Currency.wrap(address(tokenA)),
             currency1: Currency.wrap(address(tokenB)),
             fee: FEE,
             tickSpacing: TICK_SPACING,
-            hooks: IHooks(address(spectreHook))
+            hooks: IHooks(address(grimHook))
         });
 
         PoolId poolId = poolKey.toId();
@@ -185,7 +185,7 @@ contract ExecutePrivateSwap is Script {
         }
 
         // Create key image
-        bytes32 keyImage = keccak256(abi.encodePacked("spectre-key-image", block.timestamp, deployer));
+        bytes32 keyImage = keccak256(abi.encodePacked("grimswap-key-image", block.timestamp, deployer));
 
         // Create stealth meta-address (66 bytes)
         bytes memory stealthMetaAddress = new bytes(66);
@@ -259,9 +259,9 @@ contract ExecutePrivateSwap is Script {
         console.log("  [x] Stealth address generated (recipient hidden)");
         console.log("  [x] ERC-5564 announcement emitted");
         console.log("");
-        console.log("Check SpectreHook stats:");
+        console.log("Check GrimHook stats:");
 
-        SpectreHook finalHook = SpectreHook(address(spectreHook));
+        GrimHook finalHook = GrimHook(address(grimHook));
         console.log("  Total private swaps:", finalHook.totalPrivateSwaps());
         console.log("  Key image used:", finalHook.usedKeyImages(keyImage));
         console.log("");
@@ -271,7 +271,7 @@ contract ExecutePrivateSwap is Script {
         console.log("");
         console.log("Deployed Contracts:");
         console.log("  RingVerifierMock:", address(mockVerifier));
-        console.log("  SpectreHook:", address(spectreHook));
+        console.log("  GrimHook:", address(grimHook));
         console.log("  Token A:", address(tokenA));
         console.log("  Token B:", address(tokenB));
         console.log("  PoolTestHelper:", address(helper));

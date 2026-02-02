@@ -14,7 +14,7 @@ contract DeploySimple is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        console.log("Deploying Spectre Protocol (Simple)...");
+        console.log("Deploying GrimSwap (Simple)...");
         console.log("Deployer:", deployer);
         console.log("Chain ID:", block.chainid);
 

@@ -6,13 +6,13 @@ import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {HookMiner} from "v4-periphery/src/utils/HookMiner.sol";
 
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 import {IRingVerifier} from "../src/interfaces/IRingVerifier.sol";
 import {IStealthAddressRegistry} from "../src/interfaces/IStealthAddressRegistry.sol";
 import {IERC5564Announcer} from "../src/interfaces/IERC5564Announcer.sol";
 
 /// @title DeployHookMined
-/// @notice Deploy SpectreHook to an address with correct hook flags using CREATE2
+/// @notice Deploy GrimHook to an address with correct hook flags using CREATE2
 contract DeployHookMined is Script {
     // CREATE2 Deployer Proxy (standard address on most chains)
     address constant CREATE2_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
@@ -23,7 +23,7 @@ contract DeployHookMined is Script {
     address constant STEALTH_REGISTRY = 0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307;
     address constant ANNOUNCER = 0x42013A72753F6EC28e27582D4cDb8425b44fd311;
 
-    // Required hook flags for SpectreHook:
+    // Required hook flags for GrimHook:
     // - beforeSwap (bit 7): 0x80
     // - afterSwap (bit 6): 0x40
     // - afterSwapReturnDelta (bit 2): 0x04
@@ -35,7 +35,7 @@ contract DeployHookMined is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        console.log("=== DEPLOY SPECTRE HOOK WITH MINED ADDRESS ===");
+        console.log("=== DEPLOY GRIM HOOK WITH MINED ADDRESS ===");
         console.log("Deployer:", deployer);
         console.log("");
         console.log("Required hook flags:");
@@ -58,7 +58,7 @@ contract DeployHookMined is Script {
         (address hookAddress, bytes32 salt) = HookMiner.find(
             CREATE2_DEPLOYER,
             REQUIRED_FLAGS,
-            type(SpectreHook).creationCode,
+            type(GrimHook).creationCode,
             constructorArgs
         );
 
@@ -71,7 +71,7 @@ contract DeployHookMined is Script {
         // Deploy using CREATE2 Deployer Proxy
         console.log("--- Deploying via CREATE2 Deployer Proxy ---");
 
-        bytes memory bytecode = abi.encodePacked(type(SpectreHook).creationCode, constructorArgs);
+        bytes memory bytecode = abi.encodePacked(type(GrimHook).creationCode, constructorArgs);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -100,10 +100,10 @@ contract DeployHookMined is Script {
 
         console.log("");
         console.log("=== DEPLOYMENT SUCCESSFUL ===");
-        console.log("SpectreHook:", finalAddress);
+        console.log("GrimHook:", finalAddress);
         console.log("Address flags:", uint160(finalAddress) & Hooks.ALL_HOOK_MASK);
         console.log("");
         console.log("Update these addresses in your SDK and scripts:");
-        console.log("  SPECTRE_HOOK =", finalAddress);
+        console.log("  GRIM_HOOK =", finalAddress);
     }
 }

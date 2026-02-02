@@ -1,12 +1,12 @@
-# Spectre Contracts
+# GrimSwap Contracts
 
-> The Invisible Hand of DeFi - Privacy-preserving swaps on Uniswap v4
+> The Dark Arts of DeFi - Privacy-preserving swaps on Uniswap v4
 
-Smart contracts for Spectre Protocol, enabling private token swaps through ring signatures and stealth addresses on Unichain.
+Smart contracts for GrimSwap, enabling private token swaps through ring signatures and stealth addresses on Unichain.
 
 ## Overview
 
-Spectre is the first privacy-preserving DEX built on Uniswap v4, combining:
+GrimSwap is the first privacy-preserving DEX built on Uniswap v4, combining:
 - **Ring Signatures (LSAG)** - Hide sender identity among a group of addresses
 - **Stealth Addresses (ERC-5564)** - Generate unlinkable recipient addresses
 - **Uniswap v4 Hooks** - Seamless integration with Uniswap liquidity
@@ -15,7 +15,7 @@ Spectre is the first privacy-preserving DEX built on Uniswap v4, combining:
 
 | Contract | Description |
 |----------|-------------|
-| `SpectreHook.sol` | Main Uniswap v4 hook - verifies privacy proofs and routes outputs |
+| `GrimHook.sol` | Main Uniswap v4 hook - verifies privacy proofs and routes outputs |
 | `RingVerifier.sol` | LSAG ring signature verification |
 | `StealthAddressRegistry.sol` | Stealth meta-address registration and generation |
 | `ERC5564Announcer.sol` | ERC-5564 payment announcement events |
@@ -24,7 +24,7 @@ Spectre is the first privacy-preserving DEX built on Uniswap v4, combining:
 
 | Contract | Address |
 |----------|---------|
-| SpectreHook | [`0xA4D8EcabC2597271DDd436757b6349Ef412B80c4`](https://unichain-sepolia.blockscout.com/address/0xA4D8EcabC2597271DDd436757b6349Ef412B80c4) |
+| GrimHook | [`0xA4D8EcabC2597271DDd436757b6349Ef412B80c4`](https://unichain-sepolia.blockscout.com/address/0xA4D8EcabC2597271DDd436757b6349Ef412B80c4) |
 | RingVerifierMock | [`0x6A150E2681dEeb16C2e9C446572087e3da32981E`](https://unichain-sepolia.blockscout.com/address/0x6A150E2681dEeb16C2e9C446572087e3da32981E) |
 | StealthAddressRegistry | [`0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307`](https://unichain-sepolia.blockscout.com/address/0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307) |
 | ERC5564Announcer | [`0x42013A72753F6EC28e27582D4cDb8425b44fd311`](https://unichain-sepolia.blockscout.com/address/0x42013A72753F6EC28e27582D4cDb8425b44fd311) |
@@ -34,8 +34,8 @@ Spectre is the first privacy-preserving DEX built on Uniswap v4, combining:
 
 ```bash
 # Clone the repository
-git clone https://github.com/spectre-protocol/spectre-contracts
-cd spectre-contracts
+git clone https://github.com/grimswap/grimswap-contracts
+cd grimswap-contracts
 
 # Install dependencies
 forge install
@@ -62,7 +62,7 @@ forge test -vvv
 ### Unichain Sepolia (Testnet)
 
 ```bash
-forge script script/Deploy.s.sol:DeploySpectre \
+forge script script/Deploy.s.sol:DeployGrimSwap \
     --rpc-url $UNICHAIN_SEPOLIA_RPC \
     --broadcast \
     --verify
@@ -71,7 +71,7 @@ forge script script/Deploy.s.sol:DeploySpectre \
 ### Unichain Mainnet
 
 ```bash
-forge script script/Deploy.s.sol:DeploySpectre \
+forge script script/Deploy.s.sol:DeployGrimSwap \
     --rpc-url $UNICHAIN_MAINNET_RPC \
     --broadcast \
     --verify
@@ -87,7 +87,7 @@ forge script script/Deploy.s.sol:DeploySpectre \
 ## Architecture
 
 ```
-User --> SDK (generates ring sig + stealth addr) --> SpectreHook
+User --> SDK (generates ring sig + stealth addr) --> GrimHook
                                                           |
                                                           +-- beforeSwap: verify ring signature
                                                           |
@@ -104,9 +104,9 @@ User --> SDK (generates ring sig + stealth addr) --> SpectreHook
 
 1. **SDK** generates stealth keys for recipient
 2. **SDK** creates LSAG ring signature (hides sender among decoys)
-3. **SpectreHook.beforeSwap()** verifies ring signature, stores stealth address
+3. **GrimHook.beforeSwap()** verifies ring signature, stores stealth address
 4. **Uniswap v4** executes the AMM swap
-5. **SpectreHook.afterSwap()** generates stealth address, emits announcement
+5. **GrimHook.afterSwap()** generates stealth address, emits announcement
 6. **PoolTestHelper** routes output tokens to stealth address (not sender!)
 7. **Recipient** scans announcements to find incoming transfers
 
@@ -127,6 +127,6 @@ MIT
 
 ## Links
 
-- **App**: https://spectre-protocol.vercel.app
-- **SDK**: https://npmjs.com/package/@spectre-protocol/sdk
-- **Docs**: https://github.com/spectre-protocol
+- **App**: https://grimswap.vercel.app
+- **SDK**: https://npmjs.com/package/@grimswap/sdk
+- **Docs**: https://github.com/grimswap

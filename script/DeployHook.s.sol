@@ -4,13 +4,13 @@ pragma solidity ^0.8.26;
 import {Script, console} from "forge-std/Script.sol";
 import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 
-import {SpectreHookTestnet} from "../src/SpectreHookTestnet.sol";
+import {GrimHookTestnet} from "../src/GrimHookTestnet.sol";
 import {IRingVerifier} from "../src/interfaces/IRingVerifier.sol";
 import {IStealthAddressRegistry} from "../src/interfaces/IStealthAddressRegistry.sol";
 import {IERC5564Announcer} from "../src/interfaces/IERC5564Announcer.sol";
 
 /// @title DeployHook
-/// @notice Deploy SpectreHook (testnet version) using already deployed supporting contracts
+/// @notice Deploy GrimHook (testnet version) using already deployed supporting contracts
 contract DeployHook is Script {
     // Uniswap v4 PoolManager addresses
     address constant POOL_MANAGER_SEPOLIA = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
@@ -24,7 +24,7 @@ contract DeployHook is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        console.log("Deploying SpectreHook (Testnet)...");
+        console.log("Deploying GrimHook (Testnet)...");
         console.log("Deployer:", deployer);
         console.log("Chain ID:", block.chainid);
 
@@ -37,20 +37,20 @@ contract DeployHook is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        // Deploy SpectreHookTestnet (skips address validation)
-        SpectreHookTestnet hook = new SpectreHookTestnet(
+        // Deploy GrimHookTestnet (skips address validation)
+        GrimHookTestnet hook = new GrimHookTestnet(
             IPoolManager(POOL_MANAGER_SEPOLIA),
             IRingVerifier(RING_VERIFIER_SEPOLIA),
             IStealthAddressRegistry(STEALTH_REGISTRY_SEPOLIA),
             IERC5564Announcer(ANNOUNCER_SEPOLIA)
         );
 
-        console.log("SpectreHook deployed at:", address(hook));
+        console.log("GrimHook deployed at:", address(hook));
 
         vm.stopBroadcast();
 
-        console.log("\n=== SpectreHook Deployment ===");
-        console.log("SpectreHook:", address(hook));
-        console.log("==============================\n");
+        console.log("\n=== GrimHook Deployment ===");
+        console.log("GrimHook:", address(hook));
+        console.log("===========================\n");
     }
 }

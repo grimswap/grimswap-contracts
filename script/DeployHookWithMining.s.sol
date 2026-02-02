@@ -6,13 +6,13 @@ import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 import {IRingVerifier} from "../src/interfaces/IRingVerifier.sol";
 import {IStealthAddressRegistry} from "../src/interfaces/IStealthAddressRegistry.sol";
 import {IERC5564Announcer} from "../src/interfaces/IERC5564Announcer.sol";
 
 /// @title DeployHookWithMining
-/// @notice Deploy SpectreHook to an address with correct hook flags using CREATE2
+/// @notice Deploy GrimHook to an address with correct hook flags using CREATE2
 contract DeployHookWithMining is Script {
     // Deployed contracts on Unichain Sepolia
     address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
@@ -20,7 +20,7 @@ contract DeployHookWithMining is Script {
     address constant STEALTH_REGISTRY = 0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307;
     address constant ANNOUNCER = 0x42013A72753F6EC28e27582D4cDb8425b44fd311;
 
-    // Required hook flags for SpectreHook:
+    // Required hook flags for GrimHook:
     // - beforeSwap (bit 7): 0x80
     // - afterSwap (bit 6): 0x40
     // - afterSwapReturnDelta (bit 2): 0x04
@@ -33,13 +33,13 @@ contract DeployHookWithMining is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        console.log("=== DEPLOY SPECTRE HOOK WITH CORRECT FLAGS ===");
+        console.log("=== DEPLOY GRIM HOOK WITH CORRECT FLAGS ===");
         console.log("Deployer:", deployer);
         console.log("Required flags (hex):", REQUIRED_FLAGS);
         console.log("");
 
         // Compute bytecode hash
-        bytes memory creationCode = type(SpectreHook).creationCode;
+        bytes memory creationCode = type(GrimHook).creationCode;
         bytes memory constructorArgs = abi.encode(
             IPoolManager(POOL_MANAGER),
             IRingVerifier(RING_VERIFIER),
@@ -81,12 +81,12 @@ contract DeployHookWithMining is Script {
         }
 
         console.log("");
-        console.log("--- Deploying SpectreHook ---");
+        console.log("--- Deploying GrimHook ---");
 
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy using CREATE2
-        SpectreHook hook;
+        GrimHook hook;
         assembly {
             hook := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
         }
@@ -98,11 +98,11 @@ contract DeployHookWithMining is Script {
 
         console.log("");
         console.log("=== DEPLOYMENT SUCCESSFUL ===");
-        console.log("SpectreHook deployed to:", address(hook));
+        console.log("GrimHook deployed to:", address(hook));
         console.log("Address flags:", uint160(address(hook)) & Hooks.ALL_HOOK_MASK);
         console.log("");
         console.log("Verify with:");
-        console.log("  forge verify-contract", vm.toString(address(hook)), "src/SpectreHook.sol:SpectreHook");
+        console.log("  forge verify-contract", vm.toString(address(hook)), "src/GrimHook.sol:GrimHook");
     }
 
     function computeCreate2Address(address deployer, bytes32 salt, bytes32 initCodeHash)

@@ -11,10 +11,10 @@ import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 
 import {TestERC20} from "../src/test/TestERC20.sol";
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 
 /// @title CreatePoolAndSwap
-/// @notice Script to create a test pool with SpectreHook and execute a private swap
+/// @notice Script to create a test pool with GrimHook and execute a private swap
 contract CreatePoolAndSwap is Script {
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
@@ -22,7 +22,7 @@ contract CreatePoolAndSwap is Script {
 
     // Deployed contracts on Unichain Sepolia
     address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
-    address constant SPECTRE_HOOK = 0x1D508fABBff9Cb22746Fe56dB763F58F384bCd38;
+    address constant GRIM_HOOK = 0x1D508fABBff9Cb22746Fe56dB763F58F384bCd38;
 
     // Pool parameters
     uint24 constant FEE = 3000; // 0.3%
@@ -64,14 +64,14 @@ contract CreatePoolAndSwap is Script {
         console.log("Minted", mintAmount / 10 ** 18, "of each token");
         console.log("");
 
-        // Step 3: Create PoolKey with SpectreHook
+        // Step 3: Create PoolKey with GrimHook
         console.log("--- Step 3: Create Pool Key ---");
         PoolKey memory poolKey = PoolKey({
             currency0: Currency.wrap(address(tokenA)),
             currency1: Currency.wrap(address(tokenB)),
             fee: FEE,
             tickSpacing: TICK_SPACING,
-            hooks: IHooks(SPECTRE_HOOK)
+            hooks: IHooks(GRIM_HOOK)
         });
 
         PoolId poolId = poolKey.toId();
@@ -101,7 +101,7 @@ contract CreatePoolAndSwap is Script {
         console.log("Token A:", address(tokenA));
         console.log("Token B:", address(tokenB));
         console.log("Pool ID:", vm.toString(PoolId.unwrap(poolId)));
-        console.log("Hook:", SPECTRE_HOOK);
+        console.log("Hook:", GRIM_HOOK);
         console.log("");
         console.log("Next steps:");
         console.log("1. Add liquidity to the pool");

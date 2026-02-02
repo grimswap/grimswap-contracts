@@ -1,4 +1,4 @@
-# Spectre Protocol - Integration Test Summary
+# GrimSwap - Integration Test Summary
 
 **Date:** February 2, 2026
 **Network:** Unichain Sepolia (Chain ID: 1301)
@@ -25,7 +25,7 @@ Privacy Features Applied:
   [x] Stealth address generated (recipient hidden)
   [x] ERC-5564 announcement emitted
 
-Check SpectreHook stats:
+Check GrimHook stats:
   Total private swaps: 1
   Key image used: true
 ```
@@ -34,14 +34,14 @@ Check SpectreHook stats:
 
 ```
 SDK Functions Tested:
-  ✅ generateStealthKeys() - Created recipient privacy keys
-  ✅ generateRingSignature() - Created LSAG ring signature
-  ✅ encodeHookData() - Encoded data for contract
+  generateStealthKeys() - Created recipient privacy keys
+  generateRingSignature() - Created LSAG ring signature
+  encodeHookData() - Encoded data for contract
 
 On-Chain Contracts Tested:
-  ✅ StealthRegistry.registerStealthMetaAddress()
-  ✅ StealthRegistry.generateStealthAddress()
-  ✅ Announcer.announce()
+  StealthRegistry.registerStealthMetaAddress()
+  StealthRegistry.generateStealthAddress()
+  Announcer.announce()
 ```
 
 ---
@@ -54,7 +54,7 @@ On-Chain Contracts Tested:
 | StealthRegistry | `0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307` |
 | Announcer | `0x42013A72753F6EC28e27582D4cDb8425b44fd311` |
 | RingVerifier | `0x6A150E2681dEeb16C2e9C446572087e3da32981E` |
-| SpectreHook | `0x1Fff852F99d79c1B504A7Da299Cd1E4feb2c40c4` |
+| GrimHook | `0x1Fff852F99d79c1B504A7Da299Cd1E4feb2c40c4` |
 
 ---
 
@@ -63,7 +63,7 @@ On-Chain Contracts Tested:
 ### Installation
 
 ```bash
-cd spectre-sdk
+cd grimswap-sdk
 npm install
 npm run build
 ```
@@ -76,7 +76,7 @@ import {
   generateRingSignature,
   encodeHookData,
   UNICHAIN_SEPOLIA,
-} from '@spectre/sdk';
+} from '@grimswap/sdk';
 
 // 1. Generate recipient's stealth keys (one-time setup)
 const recipientKeys = generateStealthKeys();
@@ -105,7 +105,7 @@ const hookData = encodeHookData({
 ### Scanning for Incoming Transfers
 
 ```typescript
-import { checkStealthAddress, deriveStealthPrivateKey } from '@spectre/sdk';
+import { checkStealthAddress, deriveStealthPrivateKey } from '@grimswap/sdk';
 
 // Check if an announcement is for you
 const isForMe = checkStealthAddress({
@@ -130,28 +130,23 @@ if (isForMe) {
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        SPECTRE PROTOCOL                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐ │
-│  │   Frontend  │───▶│  SDK        │───▶│  Smart Contracts    │ │
-│  │   (React)   │    │  (TS/Viem)  │    │  (Solidity)         │ │
-│  └─────────────┘    └─────────────┘    └─────────────────────┘ │
-│                                                                 │
-│  SDK Functions:                     Contracts:                  │
-│  • generateStealthKeys()            • SpectreHook (Uni v4)     │
-│  • generateRingSignature()          • RingVerifier (LSAG)      │
-│  • encodeHookData()                 • StealthRegistry          │
-│  • checkStealthAddress()            • Announcer (ERC-5564)     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+                              GRIMSWAP
+
+    Frontend      SDK          Smart Contracts
+    (React)       (TS/Viem)    (Solidity)
+
+  SDK Functions:                     Contracts:
+  generateStealthKeys()            GrimHook (Uni v4)
+  generateRingSignature()          RingVerifier (LSAG)
+  encodeHookData()                 StealthRegistry
+  checkStealthAddress()            Announcer (ERC-5564)
+
 
 Privacy Flow:
 1. Sender creates ring signature (hidden among decoys)
-2. SpectreHook verifies signature in beforeSwap
+2. GrimHook verifies signature in beforeSwap
 3. Uniswap v4 executes the swap
-4. SpectreHook generates stealth address in afterSwap
+4. GrimHook generates stealth address in afterSwap
 5. ERC-5564 announcement emitted for recipient to scan
 6. Recipient derives private key to claim funds
 ```
@@ -162,13 +157,13 @@ Privacy Flow:
 
 ### Run SDK Integration Test
 ```bash
-cd spectre-sdk
+cd grimswap-sdk
 PRIVATE_KEY=0x... npx tsx scripts/executeOnChainSwap.ts
 ```
 
 ### Run Full Private Swap Test (Foundry)
 ```bash
-cd spectre-contracts
+cd grimswap-contracts
 PRIVATE_KEY=0x... forge script script/ExecutePrivateSwap.s.sol:ExecutePrivateSwap \
   --rpc-url https://sepolia.unichain.org --broadcast -vvv
 ```

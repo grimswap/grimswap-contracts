@@ -5,13 +5,13 @@ import {Script, console} from "forge-std/Script.sol";
 import {StealthAddressRegistry} from "../src/StealthAddressRegistry.sol";
 import {ERC5564Announcer} from "../src/ERC5564Announcer.sol";
 import {RingVerifier} from "../src/RingVerifier.sol";
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 
 /// @title TestContracts
-/// @notice Test script to interact with deployed Spectre contracts on testnet
+/// @notice Test script to interact with deployed GrimSwap contracts on testnet
 contract TestContracts is Script {
     // Deployed contracts on Unichain Sepolia
-    address constant SPECTRE_HOOK = 0x1D508fABBff9Cb22746Fe56dB763F58F384bCd38;
+    address constant GRIM_HOOK = 0x1D508fABBff9Cb22746Fe56dB763F58F384bCd38;
     address constant RING_VERIFIER = 0x6A150E2681dEeb16C2e9C446572087e3da32981E;
     address constant STEALTH_REGISTRY = 0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307;
     address constant ANNOUNCER = 0x42013A72753F6EC28e27582D4cDb8425b44fd311;
@@ -20,14 +20,14 @@ contract TestContracts is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        console.log("Testing Spectre Protocol contracts...");
+        console.log("Testing GrimSwap contracts...");
         console.log("Tester:", deployer);
         console.log("Chain ID:", block.chainid);
         console.log("");
 
-        // Test 1: Read SpectreHook stats
-        console.log("=== Test 1: SpectreHook Stats ===");
-        SpectreHook hook = SpectreHook(SPECTRE_HOOK);
+        // Test 1: Read GrimHook stats
+        console.log("=== Test 1: GrimHook Stats ===");
+        GrimHook hook = GrimHook(GRIM_HOOK);
         uint256 totalSwaps = hook.getStats();
         console.log("Total private swaps:", totalSwaps);
         console.log("MIN_RING_SIZE:", hook.MIN_RING_SIZE());

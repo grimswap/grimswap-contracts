@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 import {IStealthAddressRegistry} from "./interfaces/IStealthAddressRegistry.sol";
 
 /// @title StealthAddressRegistry
-/// @author Spectre Protocol
+/// @author GrimSwap
 /// @notice Registry for stealth meta-addresses and stealth address generation
 /// @dev Implements ERC-5564 stealth address scheme for secp256k1
 contract StealthAddressRegistry is IStealthAddressRegistry {

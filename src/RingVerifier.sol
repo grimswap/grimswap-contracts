@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 import {IRingVerifier} from "./interfaces/IRingVerifier.sol";
 
 /// @title RingVerifier
-/// @author Spectre Protocol
+/// @author GrimSwap
 /// @notice Verifies LSAG (Linkable Spontaneous Anonymous Group) ring signatures
 /// @dev Simplified implementation for hackathon - production would use optimized EC operations
 contract RingVerifier is IRingVerifier {

@@ -12,18 +12,18 @@ import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 
 import {TestERC20} from "../src/test/TestERC20.sol";
 import {PoolTestHelper} from "../src/test/PoolTestHelper.sol";
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 
 /// @title FullPrivateSwapTest
-/// @notice End-to-end test of Spectre Protocol private swap
+/// @notice End-to-end test of GrimSwap private swap
 contract FullPrivateSwapTest is Script {
     using PoolIdLibrary for PoolKey;
     using CurrencyLibrary for Currency;
 
     // Deployed contracts on Unichain Sepolia
     address constant POOL_MANAGER = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC;
-    // New SpectreHook with correct address flags (0xC4)
-    address constant SPECTRE_HOOK = 0x1Fff852F99d79c1B504A7Da299Cd1E4feb2c40c4;
+    // GrimHook with correct address flags (0xC4)
+    address constant GRIM_HOOK = 0x1Fff852F99d79c1B504A7Da299Cd1E4feb2c40c4;
     address constant RING_VERIFIER = 0x6A150E2681dEeb16C2e9C446572087e3da32981E;
     address constant STEALTH_REGISTRY = 0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307;
     address constant ANNOUNCER = 0x42013A72753F6EC28e27582D4cDb8425b44fd311;
@@ -38,7 +38,7 @@ contract FullPrivateSwapTest is Script {
         address deployer = vm.addr(deployerPrivateKey);
 
         console.log("============================================================");
-        console.log("     SPECTRE PROTOCOL - FULL PRIVATE SWAP TEST");
+        console.log("       GRIMSWAP - FULL PRIVATE SWAP TEST");
         console.log("============================================================");
         console.log("");
         console.log("Deployer:", deployer);
@@ -51,8 +51,8 @@ contract FullPrivateSwapTest is Script {
         // STEP 1: Deploy Test Tokens
         // ============================================
         console.log("--- STEP 1: Deploy Test Tokens ---");
-        TestERC20 tokenA = new TestERC20("Spectre Token A", "STA", 18);
-        TestERC20 tokenB = new TestERC20("Spectre Token B", "STB", 18);
+        TestERC20 tokenA = new TestERC20("Grim Token A", "GTA", 18);
+        TestERC20 tokenB = new TestERC20("Grim Token B", "GTB", 18);
 
         // Ensure proper ordering (currency0 < currency1)
         if (address(tokenA) > address(tokenB)) {
@@ -90,14 +90,14 @@ contract FullPrivateSwapTest is Script {
             currency1: Currency.wrap(address(tokenB)),
             fee: FEE,
             tickSpacing: TICK_SPACING,
-            hooks: IHooks(SPECTRE_HOOK)
+            hooks: IHooks(GRIM_HOOK)
         });
 
         PoolId poolId = poolKey.toId();
         console.log("Pool ID:", vm.toString(PoolId.unwrap(poolId)));
         console.log("Fee:", FEE);
         console.log("Tick Spacing:", TICK_SPACING);
-        console.log("Hook:", SPECTRE_HOOK);
+        console.log("Hook:", GRIM_HOOK);
         console.log("");
 
         // ============================================
@@ -212,7 +212,7 @@ contract FullPrivateSwapTest is Script {
         console.log("");
         console.log("Pool Info:");
         console.log("  Pool ID:", vm.toString(PoolId.unwrap(poolId)));
-        console.log("  Hook:", SPECTRE_HOOK);
+        console.log("  Hook:", GRIM_HOOK);
         console.log("");
     }
 

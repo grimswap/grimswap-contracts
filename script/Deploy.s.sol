@@ -6,14 +6,14 @@ import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {HookMiner} from "v4-periphery/src/utils/HookMiner.sol";
 
-import {SpectreHook} from "../src/SpectreHook.sol";
+import {GrimHook} from "../src/GrimHook.sol";
 import {RingVerifier} from "../src/RingVerifier.sol";
 import {StealthAddressRegistry} from "../src/StealthAddressRegistry.sol";
 import {ERC5564Announcer} from "../src/ERC5564Announcer.sol";
 
-/// @title DeploySpectre
-/// @notice Deployment script for Spectre Protocol contracts
-contract DeploySpectre is Script {
+/// @title DeployGrimSwap
+/// @notice Deployment script for GrimSwap contracts
+contract DeployGrimSwap is Script {
     // Uniswap v4 PoolManager addresses (from docs.uniswap.org/contracts/v4/deployments)
     address constant POOL_MANAGER_SEPOLIA = 0x00B036B58a818B1BC34d502D3fE730Db729e62AC; // Unichain Sepolia
     address constant POOL_MANAGER_MAINNET = 0x1F98400000000000000000000000000000000004; // Unichain Mainnet
@@ -22,7 +22,7 @@ contract DeploySpectre is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        console.log("Deploying Spectre Protocol...");
+        console.log("Deploying GrimSwap...");
         console.log("Deployer:", deployer);
         console.log("Chain ID:", block.chainid);
 
@@ -59,15 +59,15 @@ contract DeploySpectre is Script {
 
         // Find salt for CREATE2 that results in address with correct flags
         bytes memory creationCode = abi.encodePacked(
-            type(SpectreHook).creationCode,
+            type(GrimHook).creationCode,
             abi.encode(IPoolManager(poolManager), ringVerifier, stealthRegistry, announcer)
         );
 
-        (address hookAddress, bytes32 salt) = HookMiner.find(deployer, flags, creationCode, type(SpectreHook).creationCode);
+        (address hookAddress, bytes32 salt) = HookMiner.find(deployer, flags, creationCode, type(GrimHook).creationCode);
         console.log("Target hook address:", hookAddress);
 
-        // 4. Deploy SpectreHook at the computed address
-        SpectreHook hook = new SpectreHook{salt: salt}(
+        // 4. Deploy GrimHook at the computed address
+        GrimHook hook = new GrimHook{salt: salt}(
             IPoolManager(poolManager),
             ringVerifier,
             stealthRegistry,
@@ -75,7 +75,7 @@ contract DeploySpectre is Script {
         );
 
         require(address(hook) == hookAddress, "Hook address mismatch");
-        console.log("SpectreHook deployed at:", address(hook));
+        console.log("GrimHook deployed at:", address(hook));
 
         vm.stopBroadcast();
 
@@ -85,7 +85,7 @@ contract DeploySpectre is Script {
         console.log("RingVerifier:", address(ringVerifier));
         console.log("StealthAddressRegistry:", address(stealthRegistry));
         console.log("ERC5564Announcer:", address(announcer));
-        console.log("SpectreHook:", address(hook));
+        console.log("GrimHook:", address(hook));
         console.log("========================\n");
     }
 }

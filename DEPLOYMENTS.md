@@ -1,4 +1,4 @@
-# Spectre Protocol Deployments
+# GrimSwap Deployments
 
 ## Unichain Sepolia (Testnet)
 
@@ -10,7 +10,7 @@
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **SpectreHook** | `0xA4D8EcabC2597271DDd436757b6349Ef412B80c4` | [View](https://unichain-sepolia.blockscout.com/address/0xA4D8EcabC2597271DDd436757b6349Ef412B80c4) |
+| **GrimHook** | `0xA4D8EcabC2597271DDd436757b6349Ef412B80c4` | [View](https://unichain-sepolia.blockscout.com/address/0xA4D8EcabC2597271DDd436757b6349Ef412B80c4) |
 | RingVerifierMock | `0x6A150E2681dEeb16C2e9C446572087e3da32981E` | [View](https://unichain-sepolia.blockscout.com/address/0x6A150E2681dEeb16C2e9C446572087e3da32981E) |
 | StealthAddressRegistry | `0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307` | [View](https://unichain-sepolia.blockscout.com/address/0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307) |
 | ERC5564Announcer | `0x42013A72753F6EC28e27582D4cDb8425b44fd311` | [View](https://unichain-sepolia.blockscout.com/address/0x42013A72753F6EC28e27582D4cDb8425b44fd311) |

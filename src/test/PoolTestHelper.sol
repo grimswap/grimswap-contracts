@@ -12,8 +12,8 @@ import {IUnlockCallback} from "v4-core/src/interfaces/callback/IUnlockCallback.s
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IHooks} from "v4-core/src/interfaces/IHooks.sol";
 
-/// @notice Interface for SpectreHook stealth recipient
-interface ISpectreHook {
+/// @notice Interface for GrimHook stealth recipient
+interface IGrimHook {
     function consumeStealthRecipient(address sender) external returns (address);
 }
 
@@ -142,7 +142,7 @@ contract PoolTestHelper is IUnlockCallback {
         address stealthRecipient = address(0);
         if (address(key.hooks) != address(0) && hookData.length > 0) {
             // Try to get stealth recipient from hook
-            try ISpectreHook(address(key.hooks)).consumeStealthRecipient(address(this)) returns (address recipient) {
+            try IGrimHook(address(key.hooks)).consumeStealthRecipient(address(this)) returns (address recipient) {
                 stealthRecipient = recipient;
             } catch {}
         }
