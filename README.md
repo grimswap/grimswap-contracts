@@ -79,7 +79,7 @@ GrimSwap provides two privacy implementations:
 |----------|---------|
 | GrimPool | [`0x0102Ba64Eefdbf362E402B9dCe0Cf9edfab611f5`](https://unichain-sepolia.blockscout.com/address/0x0102Ba64Eefdbf362E402B9dCe0Cf9edfab611f5) |
 | Groth16Verifier | [`0x2AAaCece42E8ec7C6066D547C81a9e7cF09dBaeA`](https://unichain-sepolia.blockscout.com/address/0x2AAaCece42E8ec7C6066D547C81a9e7cF09dBaeA) |
-| GrimSwapZK | `TBD` (requires hook address mining) |
+| GrimSwapZK | [`0x5a01290281688BC94cA0e0EA9b3Ea7E7f98d00c4`](https://unichain-sepolia.blockscout.com/address/0x5a01290281688BC94cA0e0EA9b3Ea7E7f98d00c4) |
 
 ### Ring Signature Contracts (Unichain Sepolia)
 
