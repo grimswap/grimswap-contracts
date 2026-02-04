@@ -6,10 +6,14 @@ import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/src/types/PoolId.sol";
-import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
+import {BalanceDelta, toBalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "v4-core/src/types/BeforeSwapDelta.sol";
-import {Currency} from "v4-core/src/types/Currency.sol";
+import {Currency, CurrencyLibrary} from "v4-core/src/types/Currency.sol";
 import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
+import {SafeCast} from "v4-core/src/libraries/SafeCast.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IGrimPool} from "./interfaces/IGrimPool.sol";
 import {IGroth16Verifier} from "./interfaces/IGroth16Verifier.sol";
@@ -25,8 +29,11 @@ import {IGroth16Verifier} from "./interfaces/IGroth16Verifier.sol";
  * 2. Recipient hidden: Output goes to stealth address
  * 3. Gas payer hidden: Relayer submits transaction
  */
-contract GrimSwapZK is BaseHook {
+contract GrimSwapZK is BaseHook, Ownable {
     using PoolIdLibrary for PoolKey;
+    using CurrencyLibrary for Currency;
+    using SafeERC20 for IERC20;
+    using SafeCast for uint256;
 
     /*//////////////////////////////////////////////////////////////
                                 ERRORS
@@ -39,6 +46,7 @@ contract GrimSwapZK is BaseHook {
     error InvalidRelayerFee();
     error SwapNotInitialized();
     error UnauthorizedRelayer();
+    error TransferFailed();
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
@@ -48,15 +56,17 @@ contract GrimSwapZK is BaseHook {
         bytes32 indexed nullifierHash,
         address indexed recipient,
         address indexed relayer,
+        uint256 amount,
         uint256 fee,
         uint256 timestamp
     );
 
     event StealthPayment(
         address indexed stealthAddress,
-        address token,
+        address indexed token,
         uint256 amount,
-        bytes ephemeralPubKey
+        uint256 fee,
+        address relayer
     );
 
     /*//////////////////////////////////////////////////////////////
@@ -89,7 +99,7 @@ contract GrimSwapZK is BaseHook {
     struct PendingSwap {
         address recipient;
         address relayer;
-        uint256 relayerFee;
+        uint256 relayerFeeBps;
         bytes32 nullifierHash;
         bool initialized;
     }
@@ -110,7 +120,7 @@ contract GrimSwapZK is BaseHook {
         IPoolManager _poolManager,
         IGroth16Verifier _verifier,
         IGrimPool _grimPool
-    ) BaseHook(_poolManager) {
+    ) BaseHook(_poolManager) Ownable(msg.sender) {
         verifier = _verifier;
         grimPool = _grimPool;
     }
@@ -174,7 +184,7 @@ contract GrimSwapZK is BaseHook {
         bytes32 nullifierHash = bytes32(pubSignals[3]);
         address recipient = address(uint160(pubSignals[4]));
         address relayer = address(uint160(pubSignals[5]));
-        uint256 relayerFee = pubSignals[6];
+        uint256 relayerFeeBps = pubSignals[6];
 
         // Validate merkle root is known
         if (!grimPool.isKnownRoot(merkleRoot)) {
@@ -192,7 +202,7 @@ contract GrimSwapZK is BaseHook {
         }
 
         // Validate relayer fee
-        if (relayerFee > MAX_RELAYER_FEE_BPS) {
+        if (relayerFeeBps > MAX_RELAYER_FEE_BPS) {
             revert InvalidRelayerFee();
         }
 
@@ -216,18 +226,10 @@ contract GrimSwapZK is BaseHook {
         pendingSwaps[sender] = PendingSwap({
             recipient: recipient,
             relayer: relayer,
-            relayerFee: relayerFee,
+            relayerFeeBps: relayerFeeBps,
             nullifierHash: nullifierHash,
             initialized: true
         });
-
-        emit PrivateSwapExecuted(
-            nullifierHash,
-            recipient,
-            relayer,
-            relayerFee,
-            block.timestamp
-        );
 
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
@@ -238,7 +240,7 @@ contract GrimSwapZK is BaseHook {
 
     /**
      * @notice Route swap output to stealth address
-     * @dev Calculates relayer fee and sends remaining to recipient
+     * @dev Takes output tokens from pool and transfers to recipient/relayer
      */
     function _afterSwap(
         address sender,
@@ -247,7 +249,7 @@ contract GrimSwapZK is BaseHook {
         BalanceDelta delta,
         bytes calldata /* hookData */
     ) internal override returns (bytes4, int128) {
-        PendingSwap storage pending = pendingSwaps[sender];
+        PendingSwap memory pending = pendingSwaps[sender];
 
         if (!pending.initialized) {
             revert SwapNotInitialized();
@@ -258,19 +260,60 @@ contract GrimSwapZK is BaseHook {
         Currency outputCurrency;
 
         if (params.zeroForOne) {
+            // Swapping token0 -> token1, output is token1
             outputAmount = delta.amount1();
             outputCurrency = key.currency1;
         } else {
+            // Swapping token1 -> token0, output is token0
             outputAmount = delta.amount0();
             outputCurrency = key.currency0;
         }
 
-        uint256 absOutput = uint256(uint128(outputAmount > 0 ? outputAmount : -outputAmount));
+        // Output amount is negative (tokens owed to swapper)
+        // Convert to positive for transfer calculations
+        uint256 absOutput = outputAmount < 0
+            ? uint256(uint128(-outputAmount))
+            : uint256(uint128(outputAmount));
 
         // Calculate relayer fee
         uint256 feeAmount = 0;
-        if (pending.relayer != address(0) && pending.relayerFee > 0) {
-            feeAmount = (absOutput * pending.relayerFee) / BPS_DENOMINATOR;
+        if (pending.relayer != address(0) && pending.relayerFeeBps > 0) {
+            feeAmount = (absOutput * pending.relayerFeeBps) / BPS_DENOMINATOR;
+        }
+
+        uint256 recipientAmount = absOutput - feeAmount;
+
+        // Take tokens from the PoolManager and send to recipients
+        // The hook claims the output tokens and redirects them
+        if (absOutput > 0) {
+            // Take output tokens from pool to this contract
+            poolManager.take(outputCurrency, address(this), absOutput);
+
+            address token = Currency.unwrap(outputCurrency);
+
+            // Transfer to stealth address (recipient)
+            if (recipientAmount > 0) {
+                if (outputCurrency.isAddressZero()) {
+                    // Native ETH
+                    (bool success, ) = pending.recipient.call{value: recipientAmount}("");
+                    if (!success) revert TransferFailed();
+                } else {
+                    // ERC20
+                    IERC20(token).safeTransfer(pending.recipient, recipientAmount);
+                }
+            }
+
+            // Transfer fee to relayer
+            if (feeAmount > 0 && pending.relayer != address(0)) {
+                if (outputCurrency.isAddressZero()) {
+                    // Native ETH
+                    (bool success, ) = pending.relayer.call{value: feeAmount}("");
+                    if (!success) revert TransferFailed();
+                } else {
+                    // ERC20
+                    IERC20(token).safeTransfer(pending.relayer, feeAmount);
+                }
+            }
         }
 
         // Update stats
@@ -281,17 +324,25 @@ contract GrimSwapZK is BaseHook {
         emit StealthPayment(
             pending.recipient,
             Currency.unwrap(outputCurrency),
-            absOutput - feeAmount,
-            "" // ephemeralPubKey would be passed in production
+            recipientAmount,
+            feeAmount,
+            pending.relayer
+        );
+
+        emit PrivateSwapExecuted(
+            pending.nullifierHash,
+            pending.recipient,
+            pending.relayer,
+            recipientAmount,
+            feeAmount,
+            block.timestamp
         );
 
         // Clear pending swap
         delete pendingSwaps[sender];
 
-        // Return delta to redirect funds
-        // In production, this would route:
-        // - (absOutput - feeAmount) to recipient (stealth address)
-        // - feeAmount to relayer
+        // Return the output amount as hook delta
+        // This tells the PoolManager that the hook took these tokens
         return (this.afterSwap.selector, outputAmount);
     }
 
@@ -302,16 +353,14 @@ contract GrimSwapZK is BaseHook {
     /**
      * @notice Enable/disable relayer whitelist
      */
-    function setRelayerWhitelistEnabled(bool enabled) external {
-        // In production, add access control
+    function setRelayerWhitelistEnabled(bool enabled) external onlyOwner {
         relayerWhitelistEnabled = enabled;
     }
 
     /**
      * @notice Add/remove authorized relayer
      */
-    function setAuthorizedRelayer(address relayer, bool authorized) external {
-        // In production, add access control
+    function setAuthorizedRelayer(address relayer, bool authorized) external onlyOwner {
         authorizedRelayers[relayer] = authorized;
     }
 
@@ -335,4 +384,11 @@ contract GrimSwapZK is BaseHook {
     function isNullifierUsed(bytes32 nullifierHash) external view returns (bool) {
         return grimPool.isSpent(nullifierHash);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                            RECEIVE FUNCTION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Allow contract to receive ETH for native token swaps
+    receive() external payable {}
 }

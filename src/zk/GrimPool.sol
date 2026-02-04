@@ -279,12 +279,11 @@ contract GrimPool is IGrimPool, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Set the GrimSwapZK hook address (one-time setup)
+     * @notice Set the GrimSwapZK hook address
      * @param _grimSwapZK Address of the GrimSwapZK hook
      */
     function setGrimSwapZK(address _grimSwapZK) external {
         if (msg.sender != owner) revert Unauthorized();
-        if (grimSwapZK != address(0)) revert AlreadyInitialized();
         grimSwapZK = _grimSwapZK;
     }
 
