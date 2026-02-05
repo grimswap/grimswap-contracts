@@ -1,211 +1,109 @@
 # GrimSwap Contracts
 
-> Privacy-preserving swaps on Uniswap v4
+Privacy-preserving swap contracts for Uniswap v4 on Unichain, powered by Groth16 ZK-SNARKs.
 
-Smart contracts for GrimSwap, enabling private token swaps on Unichain using **ZK-SNARKs** (Groth16) or ring signatures.
-
-## Overview
-
-GrimSwap provides two privacy implementations:
-
-### ZK-SNARK (Groth16) - Recommended
-- **Unlimited anonymity set** - All depositors form the privacy pool
-- **Lower gas cost** - ~250k gas for verification + swap
-- **Proven security** - Based on Tornado Cash/Zcash cryptography
-
-### Ring Signatures (Legacy)
-- **Fixed anonymity set** - Ring of 5-16 signers
-- **Higher gas cost** - ~400k gas for verification
-- **Simpler setup** - No trusted setup required
-
-## ZK Architecture
+## Architecture (V3 - Production)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      GrimSwap ZK Flow                           │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   1. DEPOSIT                                                     │
-│   User ──deposit(commitment)──► GrimPool                        │
-│          (commitment = Poseidon(nullifier, secret, amount))     │
-│                                    │                             │
-│                                    ▼                             │
-│                              Merkle Tree                         │
-│                         (20 levels, 1M leaves)                   │
-│                                                                  │
-│   2. PRIVATE SWAP                                                │
-│   User ──generates proof──► ZK Proof                            │
-│          (proves: I have a valid deposit, without revealing)    │
-│                                    │                             │
-│                                    ▼                             │
-│   Relayer ──submits tx──► GrimSwapZK ──verifyProof──► Verifier  │
-│          (hides gas payer)    (v4 hook)                         │
-│                                    │                             │
-│                                    ▼                             │
-│                              Uniswap v4                          │
-│                                    │                             │
-│                                    ▼                             │
-│   Stealth Address ◄──tokens───────┘                             │
-│          (recipient hidden)                                      │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+User deposits ETH
+       │
+       ▼
+  ┌─────────┐     ZK Proof      ┌──────────────┐     Swap      ┌────────────┐
+  │ GrimPool │ ───────────────►  │ GrimSwapRouter│ ──────────►  │ Uniswap V4 │
+  │ (Deposit │   via Relayer     │  (Atomic Tx)  │              │  PoolManager│
+  │  + Tree) │                   └──────────────┘              └─────┬──────┘
+  └─────────┘                                                        │
+                                                          ┌──────────┘
+                                                          ▼
+                                                   ┌─────────────┐
+                                                   │ GrimSwapZK  │
+                                                   │  (V4 Hook)  │
+                                                   │  Verifies   │
+                                                   │  ZK proof + │
+                                                   │  Routes to  │
+                                                   │  stealth    │
+                                                   └─────────────┘
+                                                          │
+                                                          ▼
+                                                   Stealth Address
+                                                   receives output tokens
 ```
 
 ## Contracts
 
-### ZK Privacy Contracts (`src/zk/`)
-
 | Contract | Description |
 |----------|-------------|
-| `GrimPool.sol` | Deposit pool with Merkle tree (2^20 = ~1M deposits) |
-| `GrimSwapZK.sol` | Uniswap v4 hook with ZK proof verification |
-| `Groth16Verifier.sol` | On-chain Groth16 proof verification (auto-generated) |
-| `Groth16VerifierMock.sol` | Mock verifier for testing |
+| `GrimPool` | Deposit pool with Poseidon Merkle tree (20 levels, ~1M deposits) |
+| `GrimSwapZK` | Uniswap v4 hook - dual-mode: passthrough for regular swaps, ZK verification for private swaps |
+| `GrimSwapRouter` | Atomic orchestrator: releases ETH from GrimPool + swaps in one tx |
+| `Groth16Verifier` | On-chain ZK proof verifier (auto-generated from circuits) |
 
-### Ring Signature Contracts (Legacy)
-
-| Contract | Description |
-|----------|-------------|
-| `GrimHook.sol` | Main Uniswap v4 hook - verifies ring signatures |
-| `RingVerifier.sol` | LSAG ring signature verification |
-| `StealthAddressRegistry.sol` | ERC-5564 stealth meta-address registry |
-| `ERC5564Announcer.sol` | ERC-5564 payment announcement events |
-
-## Deployed Contracts
-
-### ZK Contracts (Unichain Sepolia)
+## Deployed Addresses (Unichain Sepolia)
 
 | Contract | Address |
 |----------|---------|
-| GrimPool | [`0x0102Ba64Eefdbf362E402B9dCe0Cf9edfab611f5`](https://unichain-sepolia.blockscout.com/address/0x0102Ba64Eefdbf362E402B9dCe0Cf9edfab611f5) |
-| Groth16Verifier | [`0x2AAaCece42E8ec7C6066D547C81a9e7cF09dBaeA`](https://unichain-sepolia.blockscout.com/address/0x2AAaCece42E8ec7C6066D547C81a9e7cF09dBaeA) |
-| GrimSwapZK | [`0x5a01290281688BC94cA0e0EA9b3Ea7E7f98d00c4`](https://unichain-sepolia.blockscout.com/address/0x5a01290281688BC94cA0e0EA9b3Ea7E7f98d00c4) |
+| PoolManager (Uniswap) | `0x00B036B58a818B1BC34d502D3fE730Db729e62AC` |
+| PoolSwapTest (Uniswap) | `0x9140a78c1A137c7fF1c151EC8231272aF78a99A4` |
+| GrimPool | `0xEAB5E7B4e715A22E8c114B7476eeC15770B582bb` |
+| GrimSwapZK (Hook) | `0xeB72E2495640a4B83EBfc4618FD91cc9beB640c4` |
+| GrimSwapRouter | `0xC13a6a504da21aD23c748f08d3E991621D42DA4F` |
+| Groth16Verifier | `0xF7D14b744935cE34a210D7513471a8E6d6e696a0` |
+| TokenA (test ERC20) | `0x48bA64b5312AFDfE4Fc96d8F03010A0a86e17963` |
+| USDC | `0x31d0220469e10c4E71834a79b1f276d740d3768F` |
 
-### Ring Signature Contracts (Unichain Sepolia)
+## Tested Pools
 
-| Contract | Address |
-|----------|---------|
-| GrimHook | [`0xA4D8EcabC2597271DDd436757b6349Ef412B80c4`](https://unichain-sepolia.blockscout.com/address/0xA4D8EcabC2597271DDd436757b6349Ef412B80c4) |
-| RingVerifierMock | [`0x6A150E2681dEeb16C2e9C446572087e3da32981E`](https://unichain-sepolia.blockscout.com/address/0x6A150E2681dEeb16C2e9C446572087e3da32981E) |
-| StealthAddressRegistry | [`0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307`](https://unichain-sepolia.blockscout.com/address/0xA9e4ED4183b3B3cC364cF82dA7982D5ABE956307) |
-| ERC5564Announcer | [`0x42013A72753F6EC28e27582D4cDb8425b44fd311`](https://unichain-sepolia.blockscout.com/address/0x42013A72753F6EC28e27582D4cDb8425b44fd311) |
-
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/grimswap/grimswap-contracts
-cd grimswap-contracts
-
-# Install dependencies
-forge install
-
-# Copy environment file
-cp .env.example .env
-# Edit .env with your keys
-```
-
-## Build & Test
-
-```bash
-# Build
-forge build
-
-# Run tests
-forge test -vvv
-
-# Gas report
-forge test --gas-report
-```
-
-## Deployment
-
-### Deploy ZK Contracts (Recommended)
-
-```bash
-# Set environment
-export PRIVATE_KEY=0x...
-export RPC_URL=https://sepolia.unichain.org
-
-# Deploy
-forge script script/DeployZK.s.sol:DeployGrimSwapZK \
-    --rpc-url $RPC_URL \
-    --broadcast
-
-# Verify
-forge verify-contract <address> src/zk/GrimPool.sol:GrimPool --chain 1301
-```
-
-### Deploy Ring Signature Contracts (Legacy)
-
-```bash
-forge script script/Deploy.s.sol:DeployGrimSwap \
-    --rpc-url $RPC_URL \
-    --broadcast
-```
-
-## Network Configuration
-
-| Network | Chain ID | RPC | Explorer |
-|---------|----------|-----|----------|
-| Unichain Sepolia | 1301 | https://sepolia.unichain.org | https://unichain-sepolia.blockscout.com |
-| Unichain Mainnet | 130 | https://mainnet.unichain.org | https://uniscan.xyz |
-| PoolManager (Sepolia) | - | - | `0x00B036B58a818B1BC34d502D3fE730Db729e62AC` |
-
-## ZK Circuit
-
-The ZK circuit (`privateSwap.circom`) proves:
-- Commitment exists in Merkle tree (without revealing which one)
-- User knows preimage (secret, nullifier, amount)
-- Nullifier hash is correctly computed (for double-spend prevention)
-- Recipient and swap parameters match public signals
-
-**Circuit Stats:**
-- Constraints: 11,513
-- Public signals: 8
-- Proving time: ~800ms (browser), ~200ms (native)
-
-## Gas Estimates
-
-| Operation | Gas |
-|-----------|-----|
-| Deposit to GrimPool | ~150,000 |
-| Private Swap (ZK) | ~250,000 |
-| Private Swap (Ring Sig) | ~400,000 |
-| Regular Uniswap Swap | ~120,000 |
+| Pool | Status | Notes |
+|------|--------|-------|
+| ETH/TokenA (fee=3000, ts=60) | Tested successfully | Full ZK swap completed, 0.001 ETH -> 0.000983 TokenA |
+| ETH/USDC (fee=500, ts=10) | Pool created, needs liquidity | Frontend should create pool with proper liquidity |
 
 ## Privacy Guarantees
 
-| Feature | ZK-SNARK | Ring Signature |
-|---------|----------|----------------|
-| Anonymity Set | All depositors (~1M) | Ring members (5-16) |
-| Sender Privacy | | |
-| Recipient Privacy | (stealth address) | (stealth address) |
-| Gas Payer Privacy | (relayer) | (relayer) |
-| Double-spend Prevention | (nullifier) | (key image) |
+- **Sender hidden**: ZK proof proves deposit membership without revealing which deposit
+- **Recipient hidden**: Output goes to one-time stealth address
+- **Gas payer hidden**: Relayer submits transaction, user never touches chain
+- **Double-spend prevented**: Nullifier hash marks each deposit as spent
+- **Atomic execution**: Router reverts everything if ZK proof is invalid
 
-## Security
+## Dual-Mode Hook
 
-- **Merkle root history**: Stores 30 recent roots to prevent front-running
-- **Nullifier tracking**: Prevents double-spending
-- **Trusted setup**: Uses Hermez/Zcash Powers of Tau ceremony
-- **Access control**: Only GrimSwapZK can mark nullifiers as spent
+GrimSwapZK operates in two modes:
+- **Regular swap** (`hookData.length == 0`): Passthrough, no ZK verification
+- **Private swap** (`hookData.length > 0`): Full ZK proof verification + stealth routing
 
-## Related Packages
+This allows the same pool to serve both regular and private swaps.
 
-| Package | Description |
-|---------|-------------|
-| `grimswap-circuits` | Circom circuits and SDK for proof generation |
-| `grimswap-relayer` | HTTP service for private swap submission |
-| `grimswap-sdk` | TypeScript SDK for frontend integration |
-| `grimswap-test` | Integration tests |
+## Development
+
+```bash
+# Install
+forge install
+
+# Build
+forge build
+
+# Test
+forge test
+```
+
+## Creating a Pool (Frontend)
+
+To create a new pool with the GrimSwapZK hook:
+
+1. Call `poolManager.initialize(poolKey, sqrtPriceX96)` with hook = GrimSwapZK address
+2. Deploy a liquidity helper (or use the `DirectLiquidityAdder` pattern in `script/AddLiquidityDirect.s.sol`)
+3. Add liquidity with explicit `liquidityDelta` (the simplified calculation in PoolTestHelper doesn't work for tokens with different decimals like ETH/USDC)
+
+**Important**: For ETH/USDC pools, do NOT use `PoolTestHelper.addLiquidity()` as the simplified liquidity calculation breaks for tokens with different decimal places. Use `DirectLiquidityAdder` with an explicit `liquidityDelta` instead.
+
+### sqrtPriceX96 Reference
+
+| Price (ETH/USDC) | sqrtPriceX96 |
+|---|---|
+| $2000 | `3543191142285914205922034` |
+| $3000 | `4339505028714986015908034` |
 
 ## License
 
 MIT
-
-## Links
-
-- **App**: https://grimswap.vercel.app
-- **SDK**: https://npmjs.com/package/@grimswap/sdk
-- **Docs**: https://github.com/grimswap
