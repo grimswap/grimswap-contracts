@@ -44,19 +44,19 @@ User deposits ETH
 |----------|---------|
 | PoolManager (Uniswap) | `0x00B036B58a818B1BC34d502D3fE730Db729e62AC` |
 | PoolSwapTest (Uniswap) | `0x9140a78c1A137c7fF1c151EC8231272aF78a99A4` |
+| PoolModifyLiquidityTest | `0x5fa728C0A5cfd51BEe4B060773f50554c0C8A7AB` |
 | GrimPool | `0xEAB5E7B4e715A22E8c114B7476eeC15770B582bb` |
-| GrimSwapZK (Hook) | `0xeB72E2495640a4B83EBfc4618FD91cc9beB640c4` |
+| GrimSwapZK (Hook) | `0x3bee7D1A5914d1ccD34D2a2d00C359D0746400C4` |
 | GrimSwapRouter | `0xC13a6a504da21aD23c748f08d3E991621D42DA4F` |
 | Groth16Verifier | `0xF7D14b744935cE34a210D7513471a8E6d6e696a0` |
-| TokenA (test ERC20) | `0x48bA64b5312AFDfE4Fc96d8F03010A0a86e17963` |
 | USDC | `0x31d0220469e10c4E71834a79b1f276d740d3768F` |
 
-## Tested Pools
+## Active Pools
 
-| Pool | Status | Notes |
-|------|--------|-------|
-| ETH/TokenA (fee=3000, ts=60) | Tested successfully | Full ZK swap completed, 0.001 ETH -> 0.000983 TokenA |
-| ETH/USDC (fee=500, ts=10) | Pool created, needs liquidity | Frontend should create pool with proper liquidity |
+| Pool | Pool ID | Fee | TickSpacing | Status |
+|------|---------|-----|-------------|--------|
+| ETH/USDC (GrimSwap) | `0xca4150cd3ab144877e0dee5630129d84b986daa7ef5f287729e2f2da00c3fe38` | 3000 | 60 | Active with liquidity |
+| ETH/USDC (Vanilla) | `0x1927686e9757bb312fc499e480536d466c788dcdc86a1b62c82643157f05b603` | 3000 | 60 | Active |
 
 ## Privacy Guarantees
 
